@@ -1,221 +1,136 @@
-# Profile Search Filters Specification
+# 團隊篩選功能規格
 
 ## ADDED Requirements
 
-### Requirement: Role Filter Selection
-The system SHALL allow users to filter profiles by role with multi-select capability.
+### Requirement: 團隊下拉選單
+系統必須提供團隊篩選下拉選單，讓使用者可以選擇要顯示的團隊資料。
 
-#### Scenario: User selects single role filter
-- **WHEN** user opens role filter dropdown
-- **THEN** system displays all available roles
-- **WHEN** user selects "Engineer" role
-- **THEN** search results show only profiles with "Engineer" role
+#### Scenario: 使用者開啟團隊下拉選單
+- **當** 使用者點擊團隊下拉選單
+- **則** 系統顯示所有可用的團隊選項
+- **則** 包含「全部團隊」選項作為預設值
 
-#### Scenario: User selects multiple roles
-- **WHEN** user selects both "Engineer" and "Designer" roles
-- **THEN** search results show profiles with either "Engineer" OR "Designer" role
+#### Scenario: 使用者選擇特定團隊
+- **當** 使用者從下拉選單選擇「工程部」
+- **則** 頁面只顯示「工程部」的資料
+- **則** 其他團隊的資料被隱藏
 
-#### Scenario: User deselects a role
-- **WHEN** user has "Engineer" and "Designer" selected
-- **WHEN** user deselects "Designer"
-- **THEN** search results update to show only "Engineer" profiles
+#### Scenario: 使用者選擇全部團隊
+- **當** 使用者選擇「全部團隊」選項
+- **則** 頁面顯示所有團隊的資料
+- **則** 不套用任何篩選
 
-#### Scenario: No roles selected
-- **WHEN** no roles are selected in the filter
-- **THEN** system shows all profiles (no role filtering applied)
+### Requirement: 篩選結果即時更新
+系統必須在使用者選擇團隊後，立即更新顯示的資料。
 
-### Requirement: Team Filter Selection
-The system SHALL allow users to filter profiles by team with multi-select capability.
+#### Scenario: 切換團隊時即時更新
+- **當** 使用者將選擇從「工程部」切換為「業務部」
+- **則** 頁面內容立即更新為「業務部」的資料
+- **則** 不需要重新整理頁面或點擊確認按鈕
 
-#### Scenario: User selects single team filter
-- **WHEN** user opens team filter dropdown
-- **THEN** system displays all available teams
-- **WHEN** user selects "Product" team
-- **THEN** search results show only profiles in "Product" team
+#### Scenario: 顯示篩選後的資料筆數
+- **當** 使用者選擇某個團隊
+- **則** 系統顯示該團隊的資料筆數（例如：「顯示 15 筆工程部的資料」）
 
-#### Scenario: User selects multiple teams
-- **WHEN** user selects both "Product" and "Engineering" teams
-- **THEN** search results show profiles in either "Product" OR "Engineering" team
+### Requirement: 清除篩選功能
+系統必須提供清除篩選的方式，讓使用者快速回到顯示全部資料的狀態。
 
-#### Scenario: User deselects a team
-- **WHEN** user has "Product" and "Engineering" selected
-- **WHEN** user deselects "Engineering"
-- **THEN** search results update to show only "Product" team profiles
+#### Scenario: 點擊清除篩選按鈕
+- **當** 使用者選擇了特定團隊
+- **當** 使用者點擊「清除篩選」按鈕
+- **則** 下拉選單重設為「全部團隊」
+- **則** 顯示所有團隊的資料
 
-#### Scenario: No teams selected
-- **WHEN** no teams are selected in the filter
-- **THEN** system shows all profiles (no team filtering applied)
+#### Scenario: 未選擇團隊時
+- **當** 使用者尚未選擇特定團隊（顯示全部）
+- **則** 「清除篩選」按鈕被隱藏或停用
 
-### Requirement: Combined Filter Logic
-The system SHALL support filtering by both role and team simultaneously using AND logic between filter types.
+### Requirement: 記住使用者選擇
+系統必須記住使用者上次選擇的團隊，在重新整理頁面後保持相同的篩選狀態。
 
-#### Scenario: Filter by role AND team
-- **WHEN** user selects "Engineer" role and "Product" team
-- **THEN** search results show only profiles that are Engineers in the Product team
+#### Scenario: 頁面重新整理後保持篩選
+- **當** 使用者選擇「行銷部」團隊
+- **當** 使用者重新整理頁面
+- **則** 頁面載入後自動選擇「行銷部」
+- **則** 顯示「行銷部」的資料
 
-#### Scenario: Filter with multiple values in both filters
-- **WHEN** user selects roles ["Engineer", "Designer"] and teams ["Product", "Platform"]
-- **THEN** search results show profiles that are (Engineer OR Designer) AND (in Product OR Platform team)
+#### Scenario: 關閉瀏覽器後再開啟
+- **當** 使用者選擇「業務部」團隊
+- **當** 使用者關閉瀏覽器
+- **當** 使用者再次開啟頁面
+- **則** 頁面自動選擇「業務部」
 
-#### Scenario: One filter narrows to zero results
-- **WHEN** user selects "Engineer" role and "Sales" team
-- **WHEN** no Engineers exist in Sales team
-- **THEN** system displays "No profiles found" message with active filter information
+#### Scenario: 清除篩選後的記憶狀態
+- **當** 使用者點擊「清除篩選」
+- **當** 使用者重新整理頁面
+- **則** 頁面顯示「全部團隊」（記住清除的狀態）
 
-### Requirement: Clear Filters Action
-The system SHALL provide a way to clear all active filters and return to unfiltered state.
+### Requirement: 無資料時的提示
+系統必須在某個團隊沒有資料時，顯示適當的提示訊息。
 
-#### Scenario: Clear all filters button
-- **WHEN** user has active role and team filters
-- **WHEN** user clicks "Clear All Filters" button
-- **THEN** all filter selections are removed
-- **THEN** search results return to showing all profiles
+#### Scenario: 選擇的團隊沒有資料
+- **當** 使用者選擇「研發部」
+- **當** 系統中沒有「研發部」的資料
+- **則** 顯示「目前沒有研發部的資料」訊息
+- **則** 不顯示任何資料項目
 
-#### Scenario: Clear individual filter
-- **WHEN** user clicks remove icon on "Engineer" role tag
-- **THEN** only "Engineer" filter is removed
-- **THEN** other active filters remain applied
+#### Scenario: 全部團隊都沒有資料
+- **當** 系統中完全沒有任何資料
+- **當** 使用者選擇任何團隊
+- **則** 顯示「目前沒有任何資料」訊息
 
-#### Scenario: No active filters
-- **WHEN** no filters are currently active
-- **THEN** "Clear All Filters" button is disabled or hidden
+### Requirement: 鍵盤操作支援
+系統必須支援基本的鍵盤操作，提升使用效率。
 
-### Requirement: Filter UI Display
-The system SHALL display filter controls in an accessible and intuitive manner.
+#### Scenario: 使用鍵盤導航下拉選單
+- **當** 使用者使用 Tab 鍵移動到團隊下拉選單
+- **則** 下拉選單獲得焦點（顯示外框）
+- **當** 使用者按下方向鍵（上/下）
+- **則** 可以在選項間移動
+- **當** 使用者按下 Enter 或 Space
+- **則** 選擇目前的選項並更新篩選
 
-#### Scenario: Filter dropdown accessibility
-- **WHEN** user navigates to filter dropdown using keyboard
-- **THEN** dropdown receives focus and can be opened with Enter or Space key
-- **THEN** options can be navigated with arrow keys
-- **THEN** options can be selected/deselected with Space key
+#### Scenario: 快速鍵清除篩選（可選）
+- **當** 使用者按下 Esc 鍵
+- **則** 清除目前的篩選，回到「全部團隊」
 
-#### Scenario: Screen reader support
-- **WHEN** screen reader user navigates to filters
-- **THEN** filter labels and current selections are announced
-- **THEN** changes in filter state are announced
+### Requirement: 行動裝置友善
+系統必須在手機或平板上也能正常使用篩選功能。
 
-#### Scenario: Mobile responsive design
-- **WHEN** user accesses filters on mobile device (width < 768px)
-- **THEN** filters stack vertically or use mobile-optimized controls
-- **THEN** filters remain fully functional and easy to use
+#### Scenario: 小螢幕上的下拉選單
+- **當** 使用者在手機上開啟頁面（螢幕寬度 < 768px）
+- **則** 下拉選單使用原生的行動裝置選單
+- **則** 選單足夠大，容易點擊
 
-### Requirement: Active Filter Indicators
-The system SHALL clearly indicate which filters are currently active.
+#### Scenario: 觸控操作
+- **當** 使用者用手指點擊下拉選單
+- **則** 下拉選單順利開啟
+- **則** 選項列表容易點選
 
-#### Scenario: Display active filter tags
-- **WHEN** user has "Engineer" role and "Product" team selected
-- **THEN** system displays filter tags showing "Role: Engineer" and "Team: Product"
-- **THEN** each tag has a remove (×) button
+### Requirement: 篩選狀態顯示
+系統必須清楚顯示目前的篩選狀態，讓使用者知道正在看哪個團隊的資料。
 
-#### Scenario: Active filter count
-- **WHEN** user has 2 roles and 1 team selected
-- **THEN** system shows "3 filters active" or similar indicator
+#### Scenario: 顯示目前選擇的團隊
+- **當** 使用者選擇「工程部」
+- **則** 頁面上顯示「目前顯示：工程部」或類似訊息
+- **則** 下拉選單顯示「工程部」為選中狀態
 
-#### Scenario: Visual distinction on filter controls
-- **WHEN** role filter has selections
-- **THEN** role filter dropdown shows different visual state (e.g., highlighted, badge with count)
+#### Scenario: 顯示資料筆數統計
+- **當** 使用者選擇某個團隊
+- **則** 顯示「找到 X 筆資料」
+- **當** 選擇「全部團隊」
+- **則** 顯示「共 Y 筆資料」
 
-### Requirement: Filter State Persistence
-The system SHALL maintain filter state across navigation and page refreshes.
+### Requirement: 效能要求
+系統必須確保篩選操作快速流暢，不影響使用體驗。
 
-#### Scenario: URL parameter sync
-- **WHEN** user selects "Engineer" role and "Product" team
-- **THEN** URL updates to include `?roles=engineer&teams=product`
-- **WHEN** user shares or bookmarks this URL
-- **WHEN** another user opens the URL
-- **THEN** filters are pre-applied showing the same results
+#### Scenario: 快速篩選響應
+- **當** 資料筆數在 1000 筆以內
+- **當** 使用者選擇團隊
+- **則** 結果在 100 毫秒內更新完成
+- **則** 畫面不會有明顯的延遲或卡頓
 
-#### Scenario: Browser back/forward navigation
-- **WHEN** user applies filters and navigates to another page
-- **WHEN** user clicks browser back button
-- **THEN** filter state is restored from URL
-- **THEN** search results match the previous filtered state
-
-#### Scenario: Page refresh maintains filters
-- **WHEN** user has active filters applied
-- **WHEN** user refreshes the page
-- **THEN** filters remain active after page reload
-- **THEN** search results reflect the active filters
-
-### Requirement: Real-time Results Update
-The system SHALL update search results in real-time as filters are applied or removed.
-
-#### Scenario: Immediate result update on filter change
-- **WHEN** user selects or deselects a filter
-- **THEN** search results update within 300ms
-- **THEN** loading indicator is shown during update
-
-#### Scenario: Debounced filter application
-- **WHEN** user rapidly changes multiple filter selections
-- **THEN** system debounces API calls to avoid excessive requests
-- **THEN** final filter state is applied after user stops changing selections
-
-### Requirement: Filter Options Loading
-The system SHALL load and display available filter options from the backend.
-
-#### Scenario: Load role options
-- **WHEN** page loads
-- **THEN** system fetches list of all unique roles from API
-- **THEN** role filter dropdown is populated with available roles
-- **THEN** roles are sorted alphabetically
-
-#### Scenario: Load team options
-- **WHEN** page loads
-- **THEN** system fetches list of all unique teams from API
-- **THEN** team filter dropdown is populated with available teams
-- **THEN** teams are sorted alphabetically
-
-#### Scenario: Empty filter options
-- **WHEN** no roles or teams exist in the system
-- **THEN** respective filter shows "No options available" message
-- **THEN** filter is disabled
-
-### Requirement: Search Results Count
-The system SHALL display the count of results matching current filters.
-
-#### Scenario: Show total results with filters
-- **WHEN** user applies filters
-- **THEN** system displays "Showing X profiles" where X is the filtered count
-
-#### Scenario: Zero results indication
-- **WHEN** filter combination results in zero matches
-- **THEN** system displays "No profiles found matching your filters"
-- **THEN** system suggests removing some filters
-
-#### Scenario: Results count updates in real-time
-- **WHEN** user changes filter selections
-- **THEN** results count updates immediately to reflect new filter state
-
-### Requirement: Filter Performance
-The system SHALL ensure filters operate efficiently even with large datasets.
-
-#### Scenario: Fast filter response time
-- **WHEN** database contains up to 10,000 profiles
-- **WHEN** user applies or changes filters
-- **THEN** results are returned within 500ms
-
-#### Scenario: Optimized database queries
-- **WHEN** filters are applied
-- **THEN** backend uses indexed queries on role and team fields
-- **THEN** no full table scans are performed
-
-### Requirement: Error Handling
-The system SHALL handle filter-related errors gracefully.
-
-#### Scenario: API failure when loading filter options
-- **WHEN** API call to load roles or teams fails
-- **THEN** system displays error message: "Unable to load filter options"
-- **THEN** system provides retry button
-
-#### Scenario: API failure when applying filters
-- **WHEN** search API call fails after filter selection
-- **THEN** system shows error message
-- **THEN** previous results remain visible
-- **THEN** user can retry the search
-
-#### Scenario: Invalid filter values in URL
-- **WHEN** URL contains invalid role or team values
-- **THEN** system ignores invalid values
-- **THEN** system logs warning for debugging
-- **THEN** valid filters still work correctly
-
+#### Scenario: 大量資料時的處理（未來）
+- **當** 資料筆數超過 1000 筆
+- **則** 考慮使用虛擬列表或分頁
+- **則** 或改為後端篩選以維持效能

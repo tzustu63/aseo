@@ -1,188 +1,260 @@
-# Profile Search Filters - Design Document
+# 團隊篩選功能 - 設計文件
 
-## Context
+## 背景說明
 
-Users need to efficiently filter and find profiles within the system based on role and team attributes. This feature will enhance the search experience by allowing users to narrow down results to specific criteria.
+這是一個個人使用的工具，只有單一使用者（您自己），不需要考慮多人協作或複雜的權限管理。主要目的是快速找到特定團隊的資料。
 
-## Goals / Non-Goals
+## 目標 / 非目標
 
-### Goals
-- Enable filtering profiles by role
-- Enable filtering profiles by team
-- Support combined filtering (role AND team)
-- Provide intuitive UI for filter selection
-- Ensure filters work in real-time
-- Make filters accessible and mobile-friendly
+### 目標
+- 提供簡單的團隊篩選功能
+- 單選下拉選單（一次只選一個團隊）
+- 記住上次選擇的團隊
+- 即時更新篩選結果
+- 簡單易用的介面
 
-### Non-Goals
-- Advanced search with text queries (different feature)
-- Saved search filters (future enhancement)
-- Filter analytics or recommendations (future enhancement)
-- Bulk actions on filtered results (out of scope)
+### 非目標
+- 多選功能（不需要）
+- 角色篩選（只有您一個使用者，不需要）
+- 複雜的篩選組合（保持簡單）
+- 多使用者功能（個人工具）
+- 後端 API（如果是前端篩選的話）
 
-## Decisions
+## 設計決策
 
-### 1. Filter Type: Multi-Select vs Single-Select
+### 1. 篩選器類型：單選下拉選單
 
-**Decision**: Use multi-select dropdowns for both role and team filters
+**決定**：使用簡單的 `<select>` 下拉選單
 
-**Rationale**:
-- Users may want to see profiles from multiple roles (e.g., "Engineer" OR "Designer")
-- Teams often work cross-functionally
-- Provides maximum flexibility
+**理由**：
+- 一次只需要看一個團隊的資料
+- 介面最簡單直觀
+- 不需要額外的 UI 套件
+- 原生 HTML 元素效能最好
 
-**Alternatives considered**:
-- Single-select: Too restrictive, requires multiple searches
-- Radio buttons: Not scalable for many options
-- Free text search: Less precise, harder to implement
+**替代方案**：
+- 多選下拉：不需要，過於複雜
+- 按鈕群組：團隊數量可能較多時不適合
+- 搜尋框：對個人使用來說太複雜
 
-### 2. Filter Logic: AND vs OR
+### 2. 狀態儲存：localStorage
 
-**Decision**: 
-- Within a filter (e.g., multiple roles): Use OR logic
-- Between filters (role + team): Use AND logic
+**決定**：使用 localStorage 記住選擇
 
-**Example**:
-- Role: ["Engineer", "Designer"] AND Team: ["Product", "Platform"]
-- Returns: Profiles that are (Engineer OR Designer) AND (in Product OR Platform team)
+```javascript
+// 儲存
+localStorage.setItem('selectedTeam', team);
 
-### 3. State Management
+// 讀取
+const savedTeam = localStorage.getItem('selectedTeam');
+```
 
-**Decision**: Use URL query parameters as source of truth
+**理由**：
+- 重新整理頁面後保持選擇
+- 不需要後端支援
+- 簡單可靠
 
-```typescript
-// URL format
-/profiles?roles=engineer,designer&teams=product,platform
+### 3. 資料篩選：前端篩選
 
-// State sync
-const [filters, setFilters] = useState({
-  roles: parseRolesFromURL(),
-  teams: parseTeamsFromURL()
+**決定**：在前端直接篩選資料陣列
+
+```javascript
+const filteredData = data.filter(item => 
+  !selectedTeam || selectedTeam === 'all' || item.team === selectedTeam
+);
+```
+
+**假設**：資料量不大（< 1000 筆）
+
+**如果資料量大**：可以改用後端篩選，但先從前端開始
+
+### 4. UI 元件結構
+
+```html
+<div class="team-filter">
+  <label>選擇團隊：</label>
+  <select value={selectedTeam} onChange={handleTeamChange}>
+    <option value="all">全部團隊</option>
+    <option value="engineering">工程部</option>
+    <option value="sales">業務部</option>
+    <option value="marketing">行銷部</option>
+    <!-- 其他團隊 -->
+  </select>
+  <button onClick={clearFilter}>清除篩選</button>
+</div>
+
+<div class="filter-status">
+  {selectedTeam && selectedTeam !== 'all' && (
+    <p>目前顯示：{teamName} ({resultCount} 筆資料)</p>
+  )}
+</div>
+
+<div class="results">
+  {/* 篩選後的結果 */}
+</div>
+```
+
+### 5. 團隊選項來源
+
+**選項一**：寫死在程式碼中（簡單）
+```javascript
+const teams = [
+  { value: 'all', label: '全部團隊' },
+  { value: 'engineering', label: '工程部' },
+  { value: 'sales', label: '業務部' },
+  // ...
+];
+```
+
+**選項二**：從資料中動態提取（彈性）
+```javascript
+const teams = ['all', ...new Set(data.map(item => item.team))];
+```
+
+**建議**：如果團隊固定，用選項一；如果會變動，用選項二
+
+## 風險與取捨
+
+### 風險 1：資料量增加
+- **風險**：如果資料超過數千筆，前端篩選可能變慢
+- **緩解**：先從前端開始，如有需要再改後端篩選
+
+### 風險 2：團隊名稱不一致
+- **風險**：資料中團隊名稱可能有拼寫差異
+- **緩解**：在輸入資料時統一格式，或加入資料清理邏輯
+
+### 取捨
+
+1. **簡單 vs 功能完整**：
+   - 選擇簡單，只做單選
+   - 如需要更多功能，未來再擴充
+
+2. **前端篩選 vs 後端篩選**：
+   - 選擇前端篩選（假設資料量不大）
+   - 實作簡單，不需要後端改動
+
+3. **記憶功能 vs 每次重設**：
+   - 選擇記憶上次選擇
+   - 符合個人使用習慣
+
+## 實作範例
+
+### React 範例
+
+```jsx
+function ProfileFilter({ data }) {
+  const [selectedTeam, setSelectedTeam] = useState(() => {
+    return localStorage.getItem('selectedTeam') || 'all';
+  });
+
+  const handleTeamChange = (e) => {
+    const team = e.target.value;
+    setSelectedTeam(team);
+    localStorage.setItem('selectedTeam', team);
+  };
+
+  const clearFilter = () => {
+    setSelectedTeam('all');
+    localStorage.setItem('selectedTeam', 'all');
+  };
+
+  const filteredData = data.filter(item => 
+    selectedTeam === 'all' || item.team === selectedTeam
+  );
+
+  return (
+    <div>
+      <div className="filter-bar">
+        <select value={selectedTeam} onChange={handleTeamChange}>
+          <option value="all">全部團隊</option>
+          <option value="engineering">工程部</option>
+          <option value="sales">業務部</option>
+          <option value="marketing">行銷部</option>
+        </select>
+        {selectedTeam !== 'all' && (
+          <button onClick={clearFilter}>清除</button>
+        )}
+      </div>
+      
+      {selectedTeam !== 'all' && (
+        <p>顯示 {filteredData.length} 筆 {selectedTeam} 的資料</p>
+      )}
+      
+      <ResultList data={filteredData} />
+    </div>
+  );
+}
+```
+
+### Vanilla JavaScript 範例
+
+```javascript
+// 初始化
+const selectTeam = document.getElementById('team-select');
+const clearBtn = document.getElementById('clear-filter');
+const resultsDiv = document.getElementById('results');
+
+// 讀取儲存的選擇
+const savedTeam = localStorage.getItem('selectedTeam') || 'all';
+selectTeam.value = savedTeam;
+
+// 監聽變更
+selectTeam.addEventListener('change', (e) => {
+  const team = e.target.value;
+  localStorage.setItem('selectedTeam', team);
+  updateResults(team);
 });
+
+// 清除篩選
+clearBtn.addEventListener('click', () => {
+  selectTeam.value = 'all';
+  localStorage.setItem('selectedTeam', 'all');
+  updateResults('all');
+});
+
+// 更新結果
+function updateResults(team) {
+  const filtered = team === 'all' 
+    ? allData 
+    : allData.filter(item => item.team === team);
+  
+  renderResults(filtered);
+}
+
+// 初始顯示
+updateResults(savedTeam);
 ```
 
-**Benefits**:
-- Shareable URLs
-- Browser back/forward works correctly
-- No complex state library needed
-- Filter state persists across page refreshes
+## 實施計畫
 
-### 4. UI Component Structure
+### 階段 1：基本功能（MVP）
+1. 建立下拉選單
+2. 實作前端篩選邏輯
+3. 顯示篩選結果
 
-```typescript
-<ProfileSearch>
-  <FilterBar>
-    <RoleFilter 
-      selectedRoles={filters.roles}
-      onChange={handleRoleChange}
-    />
-    <TeamFilter 
-      selectedTeams={filters.teams}
-      onChange={handleTeamChange}
-    />
-    <ClearFiltersButton onClick={clearAllFilters} />
-  </FilterBar>
-  <FilterTags>
-    {/* Show active filters as removable tags */}
-  </FilterTags>
-  <SearchResults filters={filters} />
-</ProfileSearch>
-```
+### 階段 2：改善體驗
+1. 加入 localStorage 記憶
+2. 顯示結果計數
+3. 加入清除按鈕
 
-### 5. API Design
+### 階段 3：優化（可選）
+1. 加入過渡動畫
+2. 鍵盤快捷鍵
+3. 效能優化
 
-**Endpoint**: `GET /api/profiles`
+## 未來可能擴充
 
-**Query Parameters**:
-```
-?roles=engineer,designer&teams=product,platform
-```
+- 如果需要看多個團隊：改為多選
+- 如果資料量很大：改為後端篩選
+- 如果需要儲存多組篩選條件：加入「我的最愛篩選」
+- 如果需要更複雜的篩選：加入搜尋框或多條件篩選
 
-**Backend Implementation**:
-```sql
-SELECT * FROM profiles 
-WHERE 
-  role IN ('engineer', 'designer')
-  AND team IN ('product', 'platform')
-ORDER BY name;
-```
+## 總結
 
-**Performance**: Add composite index on (role, team) for faster queries
+這是一個簡單實用的個人工具篩選功能：
+- ✅ 單選下拉選單（夠用）
+- ✅ 記住上次選擇（方便）
+- ✅ 前端篩選（簡單）
+- ✅ 不需要複雜的後端或多選功能
 
-## Risks / Trade-offs
-
-### Risk 1: Performance with Large Datasets
-- **Risk**: Filtering thousands of profiles may be slow
-- **Mitigation**: 
-  - Add database indexes
-  - Implement pagination (limit to 50 results per page)
-  - Consider caching filter options (roles/teams list)
-
-### Risk 2: Inconsistent Data
-- **Risk**: Profiles may have inconsistent role or team names
-- **Mitigation**:
-  - Normalize role and team values on save
-  - Provide dropdown with predefined options
-  - Add data validation
-
-### Risk 3: Mobile UX Challenges
-- **Risk**: Multi-select dropdowns may be hard to use on mobile
-- **Mitigation**:
-  - Use native select on mobile when appropriate
-  - Implement responsive modal for filter selection
-  - Provide clear filter indicators
-
-### Trade-offs
-
-1. **URL-based state vs Local state**: 
-   - Chose URL for shareability
-   - Trade-off: Slightly more complex code
-
-2. **Multi-select vs Single-select**:
-   - Chose multi-select for flexibility
-   - Trade-off: More complex UI
-
-3. **Real-time vs Apply button**:
-   - Chose real-time updates
-   - Trade-off: More API calls, but better UX
-
-## Migration Plan
-
-### Phase 1: Basic Implementation
-1. Add role filter only
-2. Test with users
-3. Gather feedback
-
-### Phase 2: Team Filter
-1. Add team filter
-2. Implement combined filtering
-3. Optimize performance
-
-### Phase 3: Enhancements
-1. Add filter persistence
-2. Implement saved searches
-3. Add filter suggestions
-
-### Rollback Plan
-- Feature is purely additive
-- Can be disabled with feature flag
-- No data migrations required
-
-## Open Questions
-
-1. **Should filters be mandatory or optional?**
-   - Recommendation: Optional - show all results by default
-
-2. **How many filter options are expected?**
-   - Need to know for UI design (dropdown vs modal)
-   - If > 20 options, consider search within filter
-
-3. **Should we show result count for each filter option?**
-   - Example: "Engineer (23)" 
-   - Helps users understand data distribution
-   - Recommendation: Yes, if performance allows
-
-4. **Should filters support "NOT" logic?**
-   - Example: All roles EXCEPT "Intern"
-   - Recommendation: Not in v1, consider for v2
-
+保持簡單，先做能用的版本，有需要再擴充！

@@ -1,59 +1,49 @@
-# Implementation Tasks
+# 實作任務清單
 
-## 1. Data Model & API
+## 1. 資料模型準備
 
-- [ ] 1.1 Verify profile data model includes role and team fields
-- [ ] 1.2 Add database indexes on role and team fields for performance
-- [ ] 1.3 Update search API endpoint to accept role and team filter parameters
-- [ ] 1.4 Implement filter logic in backend query
-- [ ] 1.5 Add API validation for filter parameters
+- [ ] 1.1 確認資料模型包含團隊欄位
+- [ ] 1.2 如使用資料庫，在團隊欄位加上索引（可選）
+- [ ] 1.3 準備團隊選項清單（可寫死或從資料中提取）
 
-## 2. Filter UI Components
+## 2. 團隊篩選 UI 元件
 
-- [ ] 2.1 Create RoleFilter component with dropdown/multi-select
-- [ ] 2.2 Create TeamFilter component with dropdown/multi-select
-- [ ] 2.3 Add filter container component to hold all filters
-- [ ] 2.4 Implement "Clear All Filters" button
-- [ ] 2.5 Add filter active state indicators
+- [ ] 2.1 建立團隊篩選下拉選單元件
+- [ ] 2.2 加入「全部」選項作為預設值
+- [ ] 2.3 實作「清除篩選」按鈕
+- [ ] 2.4 加入目前選擇的團隊顯示
 
-## 3. State Management
+## 3. 狀態管理
 
-- [ ] 3.1 Set up filter state (useState/Redux/Context)
-- [ ] 3.2 Implement filter change handlers
-- [ ] 3.3 Sync filters with URL query parameters
-- [ ] 3.4 Add filter persistence to localStorage (optional)
-- [ ] 3.5 Handle filter state reset
+- [ ] 3.1 設定篩選狀態（使用 useState 或類似方式）
+- [ ] 3.2 實作團隊選擇變更處理函數
+- [ ] 3.3 將選擇的團隊儲存到 localStorage
+- [ ] 3.4 頁面載入時讀取上次選擇的團隊
+- [ ] 3.5 實作清除篩選功能
 
-## 4. Search Integration
+## 4. 資料篩選邏輯
 
-- [ ] 4.1 Update search results to reflect active filters
-- [ ] 4.2 Implement real-time result updates on filter change
-- [ ] 4.3 Show "no results" state when filters exclude all profiles
-- [ ] 4.4 Display active filter count or tags
-- [ ] 4.5 Handle loading states during filter application
+- [ ] 4.1 實作依團隊篩選資料的函數
+- [ ] 4.2 整合篩選邏輯到資料顯示流程
+- [ ] 4.3 處理「無結果」的情況顯示
+- [ ] 4.4 確保篩選後結果即時更新
 
-## 5. User Experience
+## 5. 使用者體驗
 
-- [ ] 5.1 Add filter animations and transitions
-- [ ] 5.2 Implement responsive design for mobile devices
-- [ ] 5.3 Add keyboard navigation support
-- [ ] 5.4 Ensure accessibility (ARIA labels, screen reader support)
-- [ ] 5.5 Add tooltips or help text for filters
+- [ ] 5.1 加入簡單的過渡動畫（可選）
+- [ ] 5.2 確保在小螢幕上也能正常使用
+- [ ] 5.3 加入鍵盤導航支援（Enter 開啟、方向鍵選擇）
+- [ ] 5.4 顯示目前篩選的團隊名稱
 
-## 6. Testing
+## 6. 測試
 
-- [ ] 6.1 Write unit tests for filter components
-- [ ] 6.2 Write unit tests for filter state management
-- [ ] 6.3 Write integration tests for search with filters
-- [ ] 6.4 Test filter combinations (role + team)
-- [ ] 6.5 Test edge cases (empty results, invalid filters)
-- [ ] 6.6 Perform accessibility testing
-- [ ] 6.7 Test on different browsers and devices
+- [ ] 6.1 測試選擇不同團隊的篩選功能
+- [ ] 6.2 測試清除篩選功能
+- [ ] 6.3 測試 localStorage 儲存和讀取
+- [ ] 6.4 測試無資料時的顯示
+- [ ] 6.5 測試頁面重新整理後狀態保持
 
-## 7. Documentation
+## 7. 文檔（可選）
 
-- [ ] 7.1 Update user documentation with filter usage instructions
-- [ ] 7.2 Document API filter parameters
-- [ ] 7.3 Add inline code comments
-- [ ] 7.4 Update README if needed
-
+- [ ] 7.1 在程式碼中加入簡單註解
+- [ ] 7.2 如有 README，更新使用說明

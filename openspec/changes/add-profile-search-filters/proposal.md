@@ -1,28 +1,25 @@
-# Add Profile Search Filters by Role and Team
+# 新增個人資料團隊篩選功能
 
-## Why
+## 為什麼需要這個功能
 
-Users need to efficiently find team members or profiles based on their role and team affiliation. Currently, there is no way to filter profiles, making it difficult to locate specific people in organizations with many members. Adding role and team filters will significantly improve user experience and search efficiency.
+作為個人使用工具，需要能夠快速找到特定團隊或部門的資料。目前沒有篩選功能，當資料量增加時會難以快速定位所需資訊。新增團隊篩選功能可以大幅提升個人工作效率。
 
-## What Changes
+## 變更內容
 
-- **Add role filter**: Allow users to filter profiles by job role or position
-- **Add team filter**: Allow users to filter profiles by team or department
-- **Combined filtering**: Support filtering by both role and team simultaneously
-- **Filter UI components**: Create dropdown or multi-select components for filters
-- **Filter state management**: Implement filter state and URL parameter sync
-- **Search results update**: Update search results in real-time based on filter selections
-- **Filter persistence**: Save filter preferences in user session or local storage
-- **Clear filters action**: Provide ability to reset all filters
+- **新增團隊篩選器**: 允許按團隊或部門篩選資料
+- **簡單的下拉選單**: 單一選擇團隊的下拉選單（不需要多選）
+- **即時結果更新**: 選擇團隊後立即更新顯示結果
+- **清除篩選功能**: 提供一鍵清除篩選的按鈕
+- **狀態記憶**: 記住上次選擇的團隊（使用 localStorage）
+- **全部顯示選項**: 預設選項可顯示所有團隊的資料
 
-## Impact
+## 影響範圍
 
-- **Affected specs**: New `profile-search` capability spec
-- **Affected code**: 
-  - Add filter components (UI)
-  - Update search API endpoints or queries
-  - Add filter state management
-  - Update profile data model (ensure role and team fields exist)
-- **User experience**: Significantly improves search efficiency and discoverability
-- **Performance**: May need to optimize queries with proper indexing on role and team fields
-
+- **受影響的規格**: 新增 `profile-search` 能力規格
+- **受影響的程式碼**: 
+  - 新增團隊篩選 UI 元件
+  - 更新資料查詢或篩選邏輯
+  - 新增篩選狀態管理
+  - 確保資料模型包含團隊欄位
+- **使用者體驗**: 大幅提升個人工作效率和資料查找速度
+- **效能**: 簡單的單一欄位篩選，效能影響極小
