@@ -9,7 +9,7 @@ const API_BASE = "";
 
 // 全域變數
 let currentAnalysisData = null;
-let openaiApiKey = localStorage.getItem("openai_api_key") || "";
+let openaiApiKey = ""; // 不從 localStorage 載入，每次重新整理都需要重新輸入
 
 /**
  * 分析 URL
@@ -406,7 +406,7 @@ async function testOpenAI() {
 }
 
 /**
- * 儲存 OpenAI 設定
+ * 儲存 OpenAI 設定（僅儲存到記憶體，不儲存到 localStorage）
  */
 function saveOpenAIConfig() {
   const apiKey = document.getElementById("openai-api-key").value.trim();
@@ -417,10 +417,14 @@ function saveOpenAIConfig() {
     return;
   }
 
-  localStorage.setItem("openai_api_key", apiKey);
+  // 只儲存到記憶體，不儲存到 localStorage（重新整理後會清除）
   openaiApiKey = apiKey;
 
-  showStatus(statusDiv, "✅ 設定已儲存！下次分析將使用 AI 增強功能", "success");
+  showStatus(
+    statusDiv,
+    "✅ 設定已儲存！本次分析將使用 AI 增強功能（重新整理後需重新輸入）",
+    "success"
+  );
 }
 
 /**
@@ -451,10 +455,11 @@ document.addEventListener("DOMContentLoaded", function () {
     hideError();
   });
 
-  // 載入已儲存的 API Key
-  if (openaiApiKey) {
-    apiKeyInput.value = openaiApiKey;
-  }
+  // 不載入 API Key，每次都要重新輸入
+  // API Key 輸入時更新全域變數
+  apiKeyInput.addEventListener("input", function () {
+    openaiApiKey = apiKeyInput.value.trim();
+  });
 });
 
 /**
