@@ -1,31 +1,85 @@
 # Project Context
 
 ## Purpose
-[Describe your project's purpose and goals]
+
+這是一個個人使用的 **SEO 網頁分析工具**，主要功能：
+
+- **網址輸入**：使用者輸入任意網址進行分析
+- **自動抓取**：自動抓取目標網頁的 HTML 內容
+- **多面向分析**：從程式碼、Meta 標籤、關鍵字、圖片、效能等多個面向檢查 SEO 問題
+- **問題偵測**：自動找出所有 SEO 相關的問題
+- **優化建議**：針對每個問題提供具體的修改建議和程式碼範例
+- **評分系統**：計算 SEO 健康度分數（0-100 分）
 
 ## Tech Stack
-- [List your primary technologies]
-- [e.g., TypeScript, React, Node.js]
+
+### 後端
+- **程式語言**: Python 3.9+
+- **Web 框架**: Flask
+- **HTML 解析**: BeautifulSoup4
+- **網頁抓取**: requests
+- **圖片分析**: Pillow（可選）
+
+### 前端
+- **基礎**: HTML5 + CSS3 + JavaScript
+- **樣式**: 簡單的 CSS 或 Tailwind CSS
+- **不使用框架**: 保持簡單，純 Vanilla JS
+
+### 開發工具
+- **版本控制**: Git
+- **開發流程**: OpenSpec 規格驅動開發
+- **測試**: 手動測試（個人工具）
 
 ## Project Conventions
 
 ### Code Style
-[Describe your code style preferences, formatting rules, and naming conventions]
+- **Python**: PEP 8 標準，4 空格縮排
+- **JavaScript**: ES6+ 語法，2 空格縮排
+- **HTML**: 語意化標籤，適當縮排
+- **註解**: 繁體中文註解，說明複雜邏輯
 
 ### Architecture Patterns
-[Document your architectural decisions and patterns]
+- **前後端分離**: API 介面清楚分離
+- **插件式分析器**: 每個 SEO 面向獨立分析器
+- **單一職責**: 每個分析器只檢查一個面向
+- **簡單優先**: 不過度設計，能用就好
 
 ### Testing Strategy
-[Explain your testing approach and requirements]
+- **手動測試**: 測試各種類型的網頁
+- **邊界測試**: 測試錯誤情況（無效網址、無法連線等）
+- **真實網站測試**: 使用真實網站驗證分析準確度
 
 ### Git Workflow
-[Describe your branching strategy and commit conventions]
+- **主分支**: main
+- **提交訊息**: 繁體中文，清楚描述變更內容
+- **小步提交**: 每個功能完成就提交
 
 ## Domain Context
-[Add domain-specific knowledge that AI assistants need to understand]
+
+### SEO 檢查項目
+- **技術 SEO**: Title、Meta 標籤、標題結構、HTML 語意
+- **內容 SEO**: 關鍵字使用、內容品質
+- **圖片 SEO**: Alt 屬性、檔案命名
+- **效能 SEO**: 頁面大小、資源數量
+- **行動 SEO**: Viewport 設定、響應式設計
+
+### SEO 最佳實踐
+- Title 長度：50-60 字元
+- Meta Description 長度：150-160 字元
+- 每頁一個 H1
+- 所有圖片都要有 alt
+- 關鍵字密度：1-2%
 
 ## Important Constraints
-[List any technical, business, or regulatory constraints]
+
+- **個人工具**: 只有自己使用，介面簡單即可
+- **免費使用**: 不收費，不需要帳號系統
+- **本機執行**: 不需要部署到雲端
+- **快速分析**: 分析時間控制在 10 秒內
+- **隱私保護**: 不儲存使用者輸入的網址（除非使用者要求）
 
 ## External Dependencies
-[Document key external services, APIs, or systems]
+
+- **目標網站**: 需要能夠存取要分析的網站
+- **Google SEO 指南**: 遵循 Google 官方的 SEO 最佳實踐
+- **HTML 標準**: 基於 W3C HTML5 標準
