@@ -146,7 +146,8 @@ class SEOAIEnhancer:
                     }
                 ],
                 temperature=0.3,
-                max_tokens=3000
+                max_tokens=1500,  # 降低至 1500，確保 9 秒內完成（Railway timeout 120秒 / 12項 ≈ 9秒/項）
+                timeout=8  # 設定 8 秒超時，留 1 秒緩衝
             )
             
             # 解析回應
@@ -156,7 +157,11 @@ class SEOAIEnhancer:
             return suggestions
             
         except Exception as e:
-            print(f"OpenAI API 呼叫失敗: {e}")
+            error_msg = str(e)
+            if 'timeout' in error_msg.lower():
+                print(f"OpenAI API 超時（超過 8 秒）: {e}")
+            else:
+                print(f"OpenAI API 呼叫失敗: {e}")
             return []
     
     def _create_prompt(self, url: str, category: str, issues: List[Dict], html_content: str = None) -> str:
