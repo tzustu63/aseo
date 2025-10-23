@@ -478,16 +478,19 @@ class TitleAnalyzer(BaseAnalyzer):
 ### 必要檔案
 
 #### 1. Procfile
+
 ```
 web: gunicorn app:app
 ```
 
 #### 2. runtime.txt
+
 ```
 python-3.11.0
 ```
 
 #### 3. requirements.txt
+
 ```
 flask==3.0.0
 flask-cors==4.0.0
@@ -498,6 +501,7 @@ gunicorn==21.2.0
 ```
 
 #### 4. railway.json（可選）
+
 ```json
 {
   "$schema": "https://railway.app/railway.schema.json",
@@ -553,22 +557,26 @@ MAX_HTML_SIZE=5242880       # 最大 HTML 大小（5MB）
 ### 部署步驟
 
 1. **連結 GitHub 倉庫**
+
    ```bash
    git remote add origin <your-repo-url>
    git push -u origin main
    ```
 
 2. **在 Railway 建立新專案**
+
    - 登入 Railway
    - New Project → Deploy from GitHub
    - 選擇您的倉庫
 
 3. **Railway 自動部署**
+
    - Railway 會自動偵測 Python 專案
    - 讀取 requirements.txt 安裝依賴
    - 執行 Procfile 中的啟動命令
 
 4. **取得網域**
+
    - Railway 自動提供 `.up.railway.app` 網域
    - 或設定自訂網域
 

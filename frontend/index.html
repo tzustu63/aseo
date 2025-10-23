@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="免費的 SEO 網頁分析工具，輸入網址即可檢查 SEO 問題並獲得優化建議">
+    <title>SEO 網頁分析工具</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 SEO 網頁分析工具</h1>
+            <p class="subtitle">輸入網址，立即分析 SEO 問題並獲得優化建議</p>
+        </header>
+
+        <!-- 輸入區 -->
+        <div class="input-section">
+            <input 
+                type="url" 
+                id="url-input" 
+                placeholder="輸入網址（例如：https://example.com）"
+                autocomplete="url"
+            >
+            <button id="analyze-btn" onclick="analyzeURL()">開始分析</button>
+        </div>
+
+        <!-- 載入中 -->
+        <div id="loading" class="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>分析中，請稍候...</p>
+        </div>
+
+        <!-- 錯誤訊息 -->
+        <div id="error" class="error" style="display:none;"></div>
+
+        <!-- 結果區 -->
+        <div id="results" style="display:none;">
+            <!-- SEO 分數卡片 -->
+            <div class="score-card">
+                <h2>SEO 分數</h2>
+                <div class="score-display">
+                    <div class="score-number">
+                        <span id="total-score">--</span>
+                        <span class="score-max">/100</span>
+                    </div>
+                    <div class="grade">
+                        <div id="grade-stars">--</div>
+                        <div id="grade-level">--</div>
+                    </div>
+                </div>
+                <p id="grade-description" class="grade-description">--</p>
+            </div>
+
+            <!-- 問題摘要 -->
+            <div class="summary-card">
+                <h3>問題摘要</h3>
+                <div class="summary-badges">
+                    <span class="badge badge-critical">
+                        <strong id="critical-count">0</strong> 嚴重
+                    </span>
+                    <span class="badge badge-high">
+                        <strong id="high-count">0</strong> 重要
+                    </span>
+                    <span class="badge badge-medium">
+                        <strong id="medium-count">0</strong> 中等
+                    </span>
+                    <span class="badge badge-low">
+                        <strong id="low-count">0</strong> 輕微
+                    </span>
+                </div>
+            </div>
+
+            <!-- 各項目分數 -->
+            <div class="categories-scores">
+                <h3>各項目評分</h3>
+                <div id="category-scores-list"></div>
+            </div>
+
+            <!-- 問題列表 -->
+            <div class="issues-section">
+                <h3>發現的問題與建議</h3>
+                <div id="issues-list"></div>
+            </div>
+
+            <!-- 匯出按鈕 -->
+            <div class="export-section">
+                <button onclick="exportResults()" class="export-btn">匯出結果（JSON）</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
+
