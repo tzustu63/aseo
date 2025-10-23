@@ -33,6 +33,7 @@ class HeadingsAnalyzer(BaseAnalyzer):
         h4_tags = soup.find_all('h4')
         h5_tags = soup.find_all('h5')
         h6_tags = soup.find_all('h6')
+        all_headings = soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
         
         metadata['h1_count'] = len(h1_tags)
         metadata['h2_count'] = len(h2_tags)
@@ -96,7 +97,6 @@ class HeadingsAnalyzer(BaseAnalyzer):
         # 檢查標題階層（如果有 H1）
         if len(h1_tags) > 0:
             # 檢查是否有跳級（例如 H1 直接到 H3）
-            all_headings = soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
             heading_levels = [int(h.name[1]) for h in all_headings]
             
             if len(heading_levels) > 1:

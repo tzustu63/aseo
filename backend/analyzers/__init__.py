@@ -11,6 +11,10 @@ from .keywords import KeywordsAnalyzer
 from .structure import StructureAnalyzer
 from .performance import PerformanceAnalyzer
 from .mobile import MobileAnalyzer
+from .core_web_vitals import CoreWebVitalsAnalyzer
+from .structured_data import StructuredDataAnalyzer
+from .links import LinksAnalyzer
+from .crawlability import CrawlabilityAnalyzer
 
 __all__ = [
     'BaseAnalyzer',
@@ -24,5 +28,9 @@ __all__ = [
     'StructureAnalyzer',
     'PerformanceAnalyzer',
     'MobileAnalyzer',
+    'CoreWebVitalsAnalyzer',
+    'StructuredDataAnalyzer',
+    'LinksAnalyzer',
+    'CrawlabilityAnalyzer',
 ]
 

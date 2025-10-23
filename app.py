@@ -14,6 +14,7 @@ from flask_cors import CORS
 # 將 backend 目錄加入 Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
+from dataclasses import asdict
 from analyzers import (
     TitleAnalyzer,
     MetaAnalyzer,
@@ -22,9 +23,14 @@ from analyzers import (
     KeywordsAnalyzer,
     StructureAnalyzer,
     PerformanceAnalyzer,
-    MobileAnalyzer
+    MobileAnalyzer,
+    CoreWebVitalsAnalyzer,
+    StructuredDataAnalyzer,
+    LinksAnalyzer,
+    CrawlabilityAnalyzer
 )
 from utils import calculate_total_score
+from ai_enhancement import SEOAIEnhancer, test_openai_key
 
 # 初始化 Flask 應用
 app = Flask(__name__, static_folder='frontend')
@@ -44,145 +50,198 @@ ANALYZERS = [
     StructureAnalyzer(),
     PerformanceAnalyzer(),
     MobileAnalyzer(),
+    CoreWebVitalsAnalyzer(),
+    StructuredDataAnalyzer(),
+    LinksAnalyzer(),
+    CrawlabilityAnalyzer(),
 ]
 
-
-@app.route('/')
-def index():
-    """提供前端頁面"""
-    return send_from_directory('frontend', 'index.html')
-
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    """提供靜態檔案（CSS、JS）"""
-    return send_from_directory('frontend', filename)
-
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """健康檢查端點"""
-    return jsonify({'status': 'ok', 'message': 'SEO Analyzer is running'})
-
-
-@app.route('/api/analyze', methods=['POST'])
-def analyze():
+@app.route('/api/test-openai', methods=['POST'])
+def test_openai():
     """
-    分析網址的 SEO
+    測試 OpenAI API Key
     
     Request JSON:
         {
-            "url": "https://example.com"
+            "api_key": "sk-..."
         }
     
     Response JSON:
         {
-            "url": "...",
-            "total_score": 85.5,
-            "grade": {...},
-            "analysis_time": "2.3s",
-            "results": [...],
-            "summary": {...}
+            "success": true,
+            "message": "API Key 有效"
         }
     """
     try:
-        # 取得網址
         data = request.get_json()
-        if not data or 'url' not in data:
-            return jsonify({'error': '請提供要分析的網址'}), 400
+        api_key = data.get('api_key', '').strip()
         
-        url = data['url'].strip()
+        result = test_openai_key(api_key)
+        return jsonify(result)
+    
+    except Exception as e:
+        app.logger.error(f'OpenAI test failed: {e}', exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': f'測試失敗：{str(e)}'
+        }), 500
+
+
+@app.route('/api/analyze', methods=['POST'])
+def analyze_url():
+    """
+    分析指定 URL 的 SEO 狀況
+    
+    Request JSON:
+        {
+            "url": "https://example.com",
+            "openai_api_key": "sk-..." (optional),
+            "use_ai_enhancement": true (optional)
+        }
+    
+    Response JSON:
+        {
+            "success": true,
+            "url": "https://example.com",
+            "total_score": 85,
+            "ai_enhanced": true,
+            "results": [
+                {
+                    "category": "title",
+                    "score": 90,
+                    "issues": [...]
+                }
+            ]
+        }
+    """
+    try:
+        data = request.get_json()
+        url = data.get('url', '').strip()
+        openai_api_key = data.get('openai_api_key', '').strip()
+        use_ai_enhancement = data.get('use_ai_enhancement', False)
         
-        # 驗證網址格式
+        if not url:
+            return jsonify({'error': '請提供要分析的 URL'}), 400
+        
+        # 驗證 URL 格式
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
         
-        # 記錄開始時間
+        print(f"開始分析 URL: {url}")
         start_time = time.time()
         
-        # 抓取網頁
+        # 獲取頁面內容
         try:
-            response = requests.get(
-                url,
-                timeout=ANALYZE_TIMEOUT,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (compatible; SEO-Analyzer/1.0)'
-                }
-            )
+            response = requests.get(url, timeout=ANALYZE_TIMEOUT, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
             response.raise_for_status()
-            html = response.text
             
             # 檢查 HTML 大小
-            if len(html) > MAX_HTML_SIZE:
+            if len(response.content) > MAX_HTML_SIZE:
                 return jsonify({
-                    'error': f'HTML 檔案過大（>{MAX_HTML_SIZE/1024/1024:.1f}MB），無法分析'
-                }), 413
+                    'error': f'頁面太大（超過 {MAX_HTML_SIZE // 1024 // 1024}MB），無法分析'
+                }), 400
             
-        except requests.Timeout:
-            return jsonify({'error': '網頁載入超時，請稍後再試'}), 408
-        except requests.ConnectionError:
-            return jsonify({'error': '無法連線到此網站，請確認網址是否正確'}), 503
-        except requests.HTTPError as e:
-            return jsonify({'error': f'HTTP 錯誤：{e.response.status_code}'}), e.response.status_code
-        except Exception as e:
-            return jsonify({'error': f'抓取網頁時發生錯誤：{str(e)}'}), 500
+            html_content = response.text
+            
+        except requests.exceptions.RequestException as e:
+            return jsonify({'error': f'無法獲取頁面內容：{str(e)}'}), 400
         
-        # 執行所有分析器
-        analysis_results = []
-        all_issues = []
-        
-        for analyzer in ANALYZERS:
+        # 初始化 AI 增強器（如果需要）
+        ai_enhancer = None
+        if use_ai_enhancement and openai_api_key:
             try:
-                result = analyzer.analyze(html, url)
-                analysis_results.append(result)
-                all_issues.extend(result.issues)
+                ai_enhancer = SEOAIEnhancer(openai_api_key)
+                print("🤖 已啟用 AI 深度分析模式（12 次呼叫）")
             except Exception as e:
-                app.logger.error(f'Analyzer {analyzer.name} failed: {e}')
-                # 繼續執行其他分析器
+                print(f"AI 增強器初始化失敗: {e}")
+        
+        # 執行所有分析器（逐項處理，立即 AI 增強）
+        results = []
+        results_dict = []
+        total_score = 0
+        ai_enhanced = False
+        
+        for i, analyzer in enumerate(ANALYZERS, 1):
+            try:
+                print(f"\n[{i}/12] 執行 {analyzer.__class__.__name__}...")
+                
+                # 1. 執行分析
+                result = analyzer.analyze(html_content, url)
+                results.append(result)
+                total_score += result.score
+                print(f"  ✓ 分析完成，分數：{result.score}")
+                
+                # 2. 轉換為字典
+                result_dict = {
+                    'category': result.category,
+                    'score': result.score,
+                    'issues': []
+                }
+                for issue in result.issues:
+                    issue_dict = {
+                        'type': issue.message.split('：')[0] if '：' in issue.message else issue.message.split(':')[0] if ':' in issue.message else 'SEO 問題',
+                        'message': issue.message,
+                        'severity': issue.severity,
+                        'suggestion': issue.suggestion
+                    }
+                    if hasattr(issue, 'code_example') and issue.code_example:
+                        issue_dict['code_example'] = issue.code_example
+                    result_dict['issues'].append(issue_dict)
+                
+                # 3. 立即進行 AI 增強（深度模式）
+                if ai_enhancer and result_dict['issues']:
+                    try:
+                        result_dict = ai_enhancer.enhance_single_category(url, result_dict, html_content)
+                        ai_enhanced = True
+                        print(f"  ✓ AI 增強完成")
+                    except Exception as e:
+                        print(f"  ✗ AI 增強失敗: {e}")
+                elif ai_enhancer and not result_dict['issues']:
+                    print(f"  - 無問題，跳過 AI 分析")
+                
+                # 4. 添加到結果列表
+                results_dict.append(result_dict)
+                
+            except Exception as e:
+                print(f"  ✗ {analyzer.__class__.__name__} 分析失敗：{e}")
+                import traceback
+                traceback.print_exc()
+                # 即使某個分析器失敗，也繼續執行其他分析器
+                from analyzers.base import AnalysisResult, Issue
+                result = AnalysisResult(
+                    category=analyzer.__class__.__name__.lower().replace('analyzer', ''),
+                    score=0,
+                    issues=[Issue(
+                        severity='high',
+                        message=f'分析器執行失敗：{str(e)}',
+                        suggestion='請檢查錯誤訊息或聯絡支援',
+                        priority=1
+                    )]
+                )
+                results.append(result)
+                results_dict.append({
+                    'category': result.category,
+                    'score': 0,
+                    'issues': [{'type': '錯誤', 'message': f'分析失敗：{str(e)}', 'severity': 'high', 'suggestion': '請重試'}]
+                })
         
         # 計算總分
-        scoring = calculate_total_score(analysis_results)
+        if results:
+            total_score = calculate_total_score(results)
         
-        # 計算分析時間
-        analysis_time = round(time.time() - start_time, 2)
+        analysis_time = time.time() - start_time
+        print(f"\n✓ 分析完成，耗時：{analysis_time:.2f}秒，總分：{total_score}")
         
-        # 統計問題數量
-        summary = {
-            'critical': sum(1 for i in all_issues if i.severity == 'critical'),
-            'high': sum(1 for i in all_issues if i.severity == 'high'),
-            'medium': sum(1 for i in all_issues if i.severity == 'medium'),
-            'low': sum(1 for i in all_issues if i.severity == 'low'),
-            'total_issues': len(all_issues)
-        }
-        
-        # 組裝回應
         response_data = {
+            'success': True,
             'url': url,
-            'total_score': scoring['total_score'],
-            'grade': scoring['grade'],
-            'analysis_time': f'{analysis_time}s',
-            'summary': summary,
-            'category_scores': scoring['category_scores'],
-            'results': [
-                {
-                    'category': r.category,
-                    'score': r.score,
-                    'issues': [
-                        {
-                            'severity': issue.severity,
-                            'message': issue.message,
-                            'suggestion': issue.suggestion,
-                            'priority': issue.priority,
-                            'code_example': issue.code_example,
-                            'impact': issue.impact,
-                            'difficulty': issue.difficulty
-                        }
-                        for issue in r.issues
-                    ],
-                    'metadata': r.metadata
-                }
-                for r in analysis_results
-            ]
+            'total_score': total_score['total_score'] if isinstance(total_score, dict) else total_score,
+            'analysis_time': round(analysis_time, 2),
+            'results': results_dict,
+            'ai_enhanced': ai_enhanced,
+            'timestamp': time.time()
         }
         
         return jsonify(response_data)
@@ -192,8 +251,33 @@ def analyze():
         return jsonify({'error': f'分析失敗：{str(e)}'}), 500
 
 
-if __name__ == '__main__':
-    # Railway 會設定 PORT 環境變數
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+@app.route('/health')
+def health_check():
+    """健康檢查端點（Railway 使用）"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'SEO Analyzer',
+        'analyzers': len(ANALYZERS),
+        'version': '2.0'
+    }), 200
 
+@app.route('/favicon.ico')
+def favicon():
+    """處理 favicon 請求，避免 404 錯誤"""
+    return '', 204  # No Content
+
+@app.route('/')
+def index():
+    """提供前端頁面"""
+    return send_from_directory('frontend', 'index.html')
+
+@app.route('/<path:filename>')
+def static_files(filename):
+    """提供靜態檔案"""
+    return send_from_directory('frontend', filename)
+
+
+if __name__ == '__main__':
+    # Railway 會設定 PORT 環境變數，本機開發使用 8000
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=False)

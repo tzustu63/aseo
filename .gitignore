@@ -24,17 +24,23 @@ wheels/
 venv/
 env/
 ENV/
-.venv/
+.venv
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
 
 # Logs
 *.log
+logs/
+/tmp/
 
 # Environment variables
 .env
@@ -47,4 +53,3 @@ htmlcov/
 
 # Railway
 .railway/
-

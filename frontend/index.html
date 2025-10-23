@@ -1,96 +1,167 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="免費的 SEO 網頁分析工具，輸入網址即可檢查 SEO 問題並獲得優化建議">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="免費的 SEO 網頁分析工具，輸入網址即可檢查 SEO 問題並獲得優化建議"
+    />
     <title>SEO 網頁分析工具</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>🔍 SEO 網頁分析工具</h1>
-            <p class="subtitle">輸入網址，立即分析 SEO 問題並獲得優化建議</p>
-        </header>
+      <header>
+        <h1>🔍 SEO 網頁分析工具</h1>
+        <p class="subtitle">輸入網址，立即分析 SEO 問題並獲得優化建議</p>
+      </header>
 
-        <!-- 輸入區 -->
-        <div class="input-section">
-            <input 
-                type="url" 
-                id="url-input" 
-                placeholder="輸入網址（例如：https://example.com）"
-                autocomplete="url"
+      <!-- 輸入區 -->
+      <div class="input-section">
+        <input
+          type="url"
+          id="url-input"
+          placeholder="輸入網址（例如：https://example.com）"
+          autocomplete="url"
+        />
+        <button id="analyze-btn" onclick="analyzeURL()">開始分析</button>
+      </div>
+
+      <!-- OpenAI 增強分析區（可選） -->
+      <div class="ai-section">
+        <div class="ai-header" onclick="toggleAISection()">
+          <div class="ai-title">
+            <span class="ai-icon">🤖</span>
+            <h3>AI 增強分析（選用 - GPT-4o-mini）</h3>
+          </div>
+          <span id="ai-toggle-icon" class="toggle-icon">▼</span>
+        </div>
+        <div id="ai-config" class="ai-config" style="display: none">
+          <p class="ai-hint">
+            ✨ 使用 OpenAI GPT-4o-mini 模型，快速且經濟地針對您的網站提供具體的
+            SEO 專家建議（深度模式：12 次獨立分析）
+          </p>
+          <div class="input-group">
+            <label for="openai-api-key">
+              <span class="label-icon">🔑</span>
+              OpenAI API Key
+            </label>
+            <input
+              type="password"
+              id="openai-api-key"
+              placeholder="sk-...your-api-key-here..."
+            />
+            <small class="input-hint">
+              前往
+              <a
+                href="https://platform.openai.com/api-keys"
+                target="_blank"
+                rel="noopener"
+                >OpenAI Platform</a
+              >
+              申請 API Key
+            </small>
+          </div>
+          <div class="ai-features">
+            <h4>AI 深度分析（GPT-4o-mini）：</h4>
+            <ul>
+              <li>✅ 針對您的網站實際內容分析（非通用理論）</li>
+              <li>✅ 完整列出所有需修改項目（不省略）</li>
+              <li>✅ 提供修改前後完整對照</li>
+              <li>✅ 可直接執行的具體步驟</li>
+              <li>✅ 說明改進原因和預期效果</li>
+            </ul>
+          </div>
+          <div class="button-group">
+            <button
+              id="test-ai-btn"
+              onclick="testOpenAI()"
+              class="btn-secondary"
             >
-            <button id="analyze-btn" onclick="analyzeURL()">開始分析</button>
+              測試 API Key
+            </button>
+            <button
+              id="save-ai-btn"
+              onclick="saveOpenAIConfig()"
+              class="btn-primary"
+            >
+              儲存設定
+            </button>
+          </div>
+          <div id="ai-status" class="status-message"></div>
         </div>
+      </div>
 
-        <!-- 載入中 -->
-        <div id="loading" class="loading" style="display:none;">
-            <div class="spinner"></div>
-            <p>分析中，請稍候...</p>
+      <!-- 功能說明 -->
+      <div class="features-section">
+        <h3>✨ 功能特色</h3>
+        <div class="features-grid">
+          <div class="feature-item">
+            <h4>🔍 12 項專業分析</h4>
+            <p>
+              標題、Meta、標題結構、圖片、關鍵字、HTML
+              結構、效能、行動裝置、Core Web Vitals、結構化資料、連結、可爬性
+            </p>
+          </div>
+          <div class="feature-item">
+            <h4>📊 Google 標準</h4>
+            <p>
+              基於 Google 最新 SEO 標準，包含 Core Web Vitals、Schema.org
+              結構化資料
+            </p>
+          </div>
+          <div class="feature-item">
+            <h4>⚡ 快速檢測</h4>
+            <p>幾秒內完成全面分析，即時獲得專業報告</p>
+          </div>
+          <div class="feature-item">
+            <h4>🆓 完全免費</h4>
+            <p>無需註冊，無使用限制，永久免費</p>
+          </div>
         </div>
+      </div>
 
-        <!-- 錯誤訊息 -->
-        <div id="error" class="error" style="display:none;"></div>
+      <!-- 載入狀態 -->
+      <div id="loading" class="loading" style="display: none">
+        <div class="spinner"></div>
+        <p>正在分析中，請稍候...</p>
+      </div>
 
-        <!-- 結果區 -->
-        <div id="results" style="display:none;">
-            <!-- SEO 分數卡片 -->
-            <div class="score-card">
-                <h2>SEO 分數</h2>
-                <div class="score-display">
-                    <div class="score-number">
-                        <span id="total-score">--</span>
-                        <span class="score-max">/100</span>
-                    </div>
-                    <div class="grade">
-                        <div id="grade-stars">--</div>
-                        <div id="grade-level">--</div>
-                    </div>
-                </div>
-                <p id="grade-description" class="grade-description">--</p>
-            </div>
-
-            <!-- 問題摘要 -->
-            <div class="summary-card">
-                <h3>問題摘要</h3>
-                <div class="summary-badges">
-                    <span class="badge badge-critical">
-                        <strong id="critical-count">0</strong> 嚴重
-                    </span>
-                    <span class="badge badge-high">
-                        <strong id="high-count">0</strong> 重要
-                    </span>
-                    <span class="badge badge-medium">
-                        <strong id="medium-count">0</strong> 中等
-                    </span>
-                    <span class="badge badge-low">
-                        <strong id="low-count">0</strong> 輕微
-                    </span>
-                </div>
-            </div>
-
-            <!-- 各項目分數 -->
-            <div class="categories-scores">
-                <h3>各項目評分</h3>
-                <div id="category-scores-list"></div>
-            </div>
-
-            <!-- 問題列表 -->
-            <div class="issues-section">
-                <h3>發現的問題與建議</h3>
-                <div id="issues-list"></div>
-            </div>
-
-            <!-- 匯出按鈕 -->
-            <div class="export-section">
-                <button onclick="exportResults()" class="export-btn">匯出結果（JSON）</button>
-            </div>
+      <!-- 結果區域 -->
+      <div id="results" class="results" style="display: none">
+        <div class="results-header">
+          <h2>分析結果</h2>
+          <div class="score-display">
+            <span class="score-label">總分</span>
+            <span id="total-score" class="score-value">0</span>
+          </div>
         </div>
+        <div id="results-content"></div>
+      </div>
+
+      <!-- 錯誤訊息 -->
+      <div id="error" class="error" style="display: none">
+        <h3>❌ 分析失敗</h3>
+        <p id="error-message"></p>
+      </div>
+
+      <!-- 頁腳 -->
+      <footer>
+        <p><strong>SEO 網頁分析工具</strong> - 專業免費的 SEO 檢測服務</p>
+        <p>
+          12 項專業分析：標題標籤、Meta 描述、標題結構、圖片 Alt、關鍵字、HTML
+          結構、效能指標、行動裝置、
+          <strong>Core Web Vitals (LCP/FID/CLS)</strong>、<strong
+            >結構化資料 (Schema.org)</strong
+          >、連結分析、可爬性 (Robots/Sitemap)
+        </p>
+        <p style="margin-top: 10px; font-size: 14px; opacity: 0.8">
+          基於 Google 最新 SEO 標準 | 2024 更新
+        </p>
+      </footer>
     </div>
 
-    <script src="/static/app.js"></script>
-</body>
+    <script src="/app.js"></script>
+  </body>
 </html>
-

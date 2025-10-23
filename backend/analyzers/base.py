@@ -19,6 +19,8 @@ class Issue:
     code_example: Optional[str] = None  # 程式碼範例
     impact: Optional[str] = None  # 影響程度說明
     difficulty: Optional[str] = None  # 實作難度 (easy, medium, hard)
+    fixable_type: Optional[str] = None  # 可修復類型 (auto, ai, manual)
+    fix_data: Optional[Dict[str, Any]] = None  # 修復所需資料
 
 
 @dataclass
@@ -87,7 +89,9 @@ class BaseAnalyzer(ABC):
         priority: int,
         code_example: Optional[str] = None,
         impact: Optional[str] = None,
-        difficulty: Optional[str] = None
+        difficulty: Optional[str] = None,
+        fixable_type: Optional[str] = None,
+        fix_data: Optional[Dict[str, Any]] = None
     ) -> Issue:
         """
         建立問題物件的輔助方法
@@ -100,6 +104,8 @@ class BaseAnalyzer(ABC):
             code_example: 程式碼範例（可選）
             impact: 影響說明（可選）
             difficulty: 難度（可選）
+            fixable_type: 可修復類型 (auto/ai/manual)（可選）
+            fix_data: 修復所需資料（可選）
             
         Returns:
             Issue: 問題物件
@@ -111,6 +117,8 @@ class BaseAnalyzer(ABC):
             priority=priority,
             code_example=code_example,
             impact=impact,
-            difficulty=difficulty
+            difficulty=difficulty,
+            fixable_type=fixable_type,
+            fix_data=fix_data
         )
 
