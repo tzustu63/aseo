@@ -157,7 +157,8 @@ def analyze_url():
             except Exception as e:
                 print(f"AI 增強器初始化失敗: {e}")
         
-        # 執行所有分析器（逐項處理，立即 AI 增強）
+        # 第一階段：執行所有基本分析
+        print("\n📊 第一階段：執行 12 項基本分析...")
         results = []
         results_dict = []
         total_score = 0
@@ -165,15 +166,15 @@ def analyze_url():
         
         for i, analyzer in enumerate(ANALYZERS, 1):
             try:
-                print(f"\n[{i}/12] 執行 {analyzer.__class__.__name__}...")
+                print(f"  [{i}/12] {analyzer.__class__.__name__}...", end=" ")
                 
-                # 1. 執行分析
+                # 執行分析
                 result = analyzer.analyze(html_content, url)
                 results.append(result)
                 total_score += result.score
-                print(f"  ✓ 分析完成，分數：{result.score}")
+                print(f"✓ ({result.score}分)")
                 
-                # 2. 轉換為字典
+                # 轉換為字典
                 result_dict = {
                     'category': result.category,
                     'score': result.score,
@@ -190,22 +191,11 @@ def analyze_url():
                         issue_dict['code_example'] = issue.code_example
                     result_dict['issues'].append(issue_dict)
                 
-                # 3. 立即進行 AI 增強（深度模式）
-                if ai_enhancer and result_dict['issues']:
-                    try:
-                        result_dict = ai_enhancer.enhance_single_category(url, result_dict, html_content)
-                        ai_enhanced = True
-                        print(f"  ✓ AI 增強完成")
-                    except Exception as e:
-                        print(f"  ✗ AI 增強失敗: {e}")
-                elif ai_enhancer and not result_dict['issues']:
-                    print(f"  - 無問題，跳過 AI 分析")
-                
-                # 4. 添加到結果列表
                 results_dict.append(result_dict)
                 
             except Exception as e:
-                print(f"  ✗ {analyzer.__class__.__name__} 分析失敗：{e}")
+                print(f"✗ 失敗")
+                print(f"  錯誤：{e}")
                 import traceback
                 traceback.print_exc()
                 # 即使某個分析器失敗，也繼續執行其他分析器
@@ -226,6 +216,29 @@ def analyze_url():
                     'score': 0,
                     'issues': [{'type': '錯誤', 'message': f'分析失敗：{str(e)}', 'severity': 'high', 'suggestion': '請重試'}]
                 })
+        
+        print(f"\n✓ 基本分析完成！")
+        
+        # 第二階段：平行 AI 增強
+        if ai_enhancer:
+            # 統計需要 AI 分析的項目
+            needs_ai = sum(1 for r in results_dict if r.get('issues'))
+            if needs_ai > 0:
+                print(f"\n🤖 第二階段：AI 深度分析（平行處理 3 項）")
+                try:
+                    results_dict = ai_enhancer.enhance_multiple_categories_parallel(
+                        url, 
+                        results_dict, 
+                        html_content,
+                        max_workers=3  # 同時處理 3 項
+                    )
+                    ai_enhanced = True
+                except Exception as e:
+                    print(f"\n✗ 平行 AI 分析失敗：{e}")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                print(f"\n✓ 所有項目都沒有問題，無需 AI 分析")
         
         # 計算總分
         if results:

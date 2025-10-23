@@ -6,7 +6,9 @@ AI Enhancement Module
 
 from openai import OpenAI
 from typing import Dict, List, Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+import time
 
 
 class SEOAIEnhancer:
@@ -98,6 +100,76 @@ class SEOAIEnhancer:
             print(f"  ✗ AI 增強失敗: {e}")
             return category_result
     
+    def enhance_multiple_categories_parallel(self, url: str, category_results: List[Dict[str, Any]], html_content: str = None, max_workers: int = 3) -> List[Dict[str, Any]]:
+        """
+        平行處理多個分類的 AI 增強（深度模式優化）
+        
+        Args:
+            url: 網址
+            category_results: 多個分類的分析結果列表
+            html_content: HTML 內容
+            max_workers: 最大平行數（2-4，預設 3）
+            
+        Returns:
+            增強後的結果列表
+        """
+        print(f"\n🚀 啟動平行 AI 分析模式（同時處理 {max_workers} 項）...")
+        start_time = time.time()
+        
+        enhanced_results = category_results.copy()
+        
+        # 只處理有問題的項目
+        tasks = []
+        for i, result in enumerate(category_results):
+            if result.get('issues'):
+                tasks.append((i, result))
+        
+        if not tasks:
+            print("  ℹ️  無需 AI 分析的項目")
+            return enhanced_results
+        
+        total_tasks = len(tasks)
+        print(f"  📊 共 {total_tasks} 項需要 AI 分析")
+        
+        # 使用 ThreadPoolExecutor 平行執行
+        completed_count = 0
+        failed_count = 0
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # 提交所有任務
+            future_to_index = {
+                executor.submit(
+                    self.enhance_single_category,
+                    url,
+                    task[1],
+                    html_content
+                ): (task[0], task[1].get('category', 'unknown'))
+                for task in tasks
+            }
+            
+            # 收集結果
+            for future in as_completed(future_to_index):
+                index, category_name = future_to_index[future]
+                try:
+                    enhanced_result = future.result()
+                    enhanced_results[index] = enhanced_result
+                    completed_count += 1
+                    progress = int((completed_count / total_tasks) * 100)
+                    print(f"  ✓ [{completed_count}/{total_tasks}] {category_name} 完成 ({progress}%)")
+                except Exception as e:
+                    failed_count += 1
+                    print(f"  ✗ [{completed_count + failed_count}/{total_tasks}] {category_name} 失敗: {e}")
+        
+        elapsed_time = time.time() - start_time
+        print(f"\n✅ 平行 AI 分析完成！")
+        print(f"  ⏱️  總時間: {elapsed_time:.1f} 秒")
+        print(f"  ✓ 成功: {completed_count} 項")
+        if failed_count > 0:
+            print(f"  ✗ 失敗: {failed_count} 項")
+        print(f"  ⚡ 平均速度: {elapsed_time/total_tasks:.1f} 秒/項")
+        
+        return enhanced_results
+    
     def _get_ai_suggestions(self, url: str, category_result: Dict[str, Any], html_content: str = None) -> List[str]:
         """
         使用 GPT-4o 生成特定分類的 SEO 專家建議
@@ -146,8 +218,8 @@ class SEOAIEnhancer:
                     }
                 ],
                 temperature=0.3,
-                max_tokens=1500,  # 降低至 1500，確保 9 秒內完成（Railway timeout 120秒 / 12項 ≈ 9秒/項）
-                timeout=8  # 設定 8 秒超時，留 1 秒緩衝
+                max_tokens=2500,  # 平行處理後可以提供更詳細的建議
+                timeout=15  # 平行處理後單項可用更多時間
             )
             
             # 解析回應
